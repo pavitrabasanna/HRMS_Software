@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login and Logout Time Tracker</title>
+</head>
+<body>
+    <h1>Login and Logout Time Tracker</h1>
+    <form id="login-form">
+        <label for="username">Username: </label>
+        <input type="text" id="username" required>
+        <br>
+        <label for="password">Password: </label>
+        <input type="password" id="password" required>
+        <br>
+        <button type="submit">Login</button>
+    </form>
+    <p id="login-time">Login Time: Not logged in</p>
+    <p id="logout-time">Logout Time: Not logged out</p>
+    <div id="clock" class="clock"></div>
+    <h2>Hidden Time Records</h2>
+    <table id="hidden-time-table">
+        <thead>
+            <tr>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Duration (s)</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <button id="logout-button" style="display: none">Logout</button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const loginForm = document.getElementById('login-form');
+            const loginTimeElement = document.getElementById('login-time');
+            const logoutTimeElement = document.getElementById('logout-time');
+            const logoutButton = document.getElementById('logout-button');
+            let username;  // Declare username variable outside the login form event listener
+    
+            loginForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+                username = document.getElementById('username').value;  // Assign value to username
+                const password = document.getElementById('password').value;
+    
+                fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        loginForm.style.display = 'none';
+                        loginTimeElement.textContent = `Login Time: ${data.loginTime}`;
+                        logoutButton.style.display = 'block';
+                    } else {
+                        alert('Invalid credentials. Please try again.');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            });
+    
+            // Add event listener to the logout button
+            logoutButton.addEventListener('click', function () {
+                fetch('/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `username=${encodeURIComponent(username)}`,
+                })
+                .then(response => response.json())
+                .then(logoutData => {
+                    if (logoutData.success) {
+                        logoutTimeElement.textContent = `Logout Time: ${logoutData.logoutTime}`;
+                        logoutButton.style.display = 'none';
+                        loginForm.style.display = 'block'; // Make the login form visible again
+                    } else {
+                        alert('Logout failed. Please try again.');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            });
+        });
+    </script>
+    </body>
+</html>
